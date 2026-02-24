@@ -5,7 +5,7 @@
 [![Python](https://img.shields.io/badge/Python-3.10+-yellow)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red)](https://pytorch.org/)
 
-Official implementation of **MultiDiffSense**, a ControlNet-based diffusion model for generating multi-modal visuo-tactile sensor images from depth map conditioning. This work addresses the cross-modal translation problem in tactile sensing by generating realistic sensor outputs (TacTip, ViTac, ViTacTip) from rendered depth maps using text-guided diffusion.
+Official implementation of **MultiDiffSense**, a ControlNet-based diffusion model for generating multi-modal visuo-tactile sensor images using text and depth map conditioning. This work addresses the cross-modal translation problem in tactile sensing by generating realistic aligned sensor outputs across 3 sensor madalities (TacTip, ViTac, ViTacTip) using depth maps- and text-guided diffusion.
 
 <p align="center">
   <img src="docs/figures/pipeline.png" alt="MultiDiffSense Pipeline" width="800"/>
@@ -173,7 +173,7 @@ python -m multidiffsense.data_preparation.all_processing \
     --stl_dir data/example/stl \
     --csv_dir data/example/csv \
     --tactile_dir data/example/tactile \
-    --obj_ids 1 3 6 8 18
+    --obj_ids 1
 ```
 
 **Processing order per object:**
@@ -200,7 +200,7 @@ Merge per-object datasets across all three sensor modalities into a single datas
 python -m multidiffsense.data_preparation.ds_creation \
     --tactile_dir data/example/tactile \
     --output_dir datasets \
-    --object_ids 1 3 6 8 18 \
+    --object_ids 1 \
     --sensors TacTip ViTac ViTacTip
 ```
 
@@ -237,7 +237,7 @@ python multidiffsense/controlnet/train.py \
     --config configs/controlnet_train.yaml \
     --batch_size 8 \
     --lr 1e-5 \
-    --max_epochs 350 \
+    --max_epochs 150 \
     --sd_locked
 ```
 
@@ -246,7 +246,7 @@ Key training parameters:
 |-----------|---------|-------------|
 | `batch_size` | 8 | Training batch size |
 | `lr` | 1e-5 | Learning rate |
-| `max_epochs` | 350 | Maximum training epochs |
+| `max_epochs` | 150 | Maximum training epochs |
 | `sd_locked` | True | Freeze Stable Diffusion backbone |
 | `precision` | 32 | Training precision |
 | `early_stop_patience` | 10 | Early stopping patience |
