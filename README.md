@@ -8,7 +8,7 @@
 Official implementation of **MultiDiffSense**, a ControlNet-based diffusion model for generating multi-modal visuo-tactile sensor images from depth map conditioning. This work addresses the cross-modal translation problem in tactile sensing by generating realistic sensor outputs (TacTip, ViTac, ViTacTip) from rendered depth maps using text-guided diffusion.
 
 <p align="center">
-  <img src="docs/pipeline.png" alt="MultiDiffSense Pipeline" width="800"/>
+  <img src="figures/pipeline.png" alt="MultiDiffSense Pipeline" width="800"/>
 </p>
 
 ---
@@ -480,7 +480,7 @@ python multidiffsense/controlnet/generate.py \
 
 The `data/example/` directory contains a minimal working example with:
 - 1 object across 3 sensor modalities (TacTip, ViTac, ViTacTip)
-- Per-object pose CSV in `csv/<obj_id>.csv` (tab-separated, 6-DOF pose + 6-DOF move)
+- Per-object pose CSV in `csv/<obj_id>.csv` (tab-separated, 4-DOF pose)
 - STL source file in `stl/<obj_id>.stl`
 - Tactile images in `tactile/<obj_id>/<sensor_type>/target/`
 
@@ -493,9 +493,7 @@ python -m multidiffsense.data_preparation.all_processing \
     --tactile_dir data/example/tactile \
     --obj_ids 1
 ```
-
 ---
-
 ## Citation
 
 If you find this work useful, please cite:
