@@ -1,0 +1,41 @@
+# configs/controlnet_train_long_prompt.yaml
+# MultiDiffSense -- Ablation 2: Long Prompt Training
+#
+# Identical to controlnet_train.yaml except prompt files point to
+# prompt_long.json (which includes object_description, contact_description,
+# sensor_context, style_tags, negatives, and object_pose).
+
+data:
+  dataset_dir: "datasets/"
+
+  # Long prompt split files
+  train_prompt: "datasets/train/prompt_long.json"
+  val_prompt: "datasets/val/prompt_long.json"
+  test_prompt: "datasets/test/prompt_long.json"
+
+  image_size: 512
+
+model:
+  resume_path: "models/control_sd15_ini.ckpt"
+  controlnet_config: "configs/cldm_v15.yaml"
+
+training:
+  batch_size: 8
+  learning_rate: 1.0e-5
+  max_epochs: 350
+  precision: 32
+
+  sd_locked: true
+  only_mid_control: false
+
+  early_stop_patience: 10
+  early_stop_monitor: "val/loss"
+
+  log_every_n_steps: 200
+  image_log_frequency: 300
+  val_check_interval: 1.0
+
+  num_workers: 4
+  pin_memory: true
+
+  output_dir: "results_long_prompt"
