@@ -5,10 +5,10 @@
 [![Python](https://img.shields.io/badge/Python-3.10+-yellow)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red)](https://pytorch.org/)
 
-Official implementation of **MultiDiffSense**, a ControlNet-based diffusion model for generating multi-modal visuo-tactile sensor images using text and depth map conditioning. This work addresses the cross-modal translation problem in tactile sensing by generating realistic aligned sensor outputs across 3 sensor madalities (TacTip, ViTac, ViTacTip) using depth maps- and text-guided diffusion.
+Official implementation of **MultiDiffSense**, a ControlNet-based diffusion model for generating multi-modal visuo-tactile sensor images from depth map conditioning. This work addresses the cross-modal translation problem in tactile sensing by generating realistic sensor outputs (TacTip, ViTac, ViTacTip) from rendered depth maps using text-guided diffusion.
 
 <p align="center">
-  <img src="figures/pipeline.png" alt="MultiDiffSense Pipeline" width="800"/>
+  <img src="docs/pipeline.png" alt="MultiDiffSense Pipeline" width="800"/>
 </p>
 
 ---
@@ -34,9 +34,9 @@ Official implementation of **MultiDiffSense**, a ControlNet-based diffusion mode
 
 MultiDiffSense leverages ControlNet (built on Stable Diffusion 1.5) to translate depth map renderings of 3D objects into realistic tactile sensor images across three sensor modalities:
 
-- **TacTip** — Optical tactile sensor with pin-based deformation markers
-- **ViTac** — Vision-based tactile sensor
-- **ViTacTip** — Hybrid vision-tactile sensor
+- **TacTip** -- Optical tactile sensor with pin-based deformation markers
+- **ViTac** -- Vision-based tactile sensor (no markers)
+- **ViTacTip** -- Hybrid vision-tactile sensor
 
 The model is conditioned on:
 1. **Depth maps** (rendered from STL files) as spatial control signals
@@ -48,69 +48,81 @@ The model is conditioned on:
 
 ```
 MultiDiffSense/
-├── configs/                          # Configuration files
-│   ├── controlnet_train.yaml         # Training config (paths, hyperparams)
-│   └── cldm_v15.yaml                # ControlNet + SD1.5 architecture config
-│
-├── multidiffsense/                   # Core source code
-│   ├── controlnet/                   # ControlNet model code
-│   │   ├── cldm/                     # ControlNet modules
-│   │   │   ├── cldm.py              # ControlledUNet, ControlNet, ControlLDM
-│   │   │   ├── ddim_hacked.py       # DDIM sampler for ControlNet
-│   │   │   ├── hack.py              # CLIP and attention hacks
-│   │   │   ├── logger.py            # Image logging callback
-│   │   │   ├── loss_plotter.py      # Training loss visualisation callback
-│   │   │   └── model.py             # Model creation and checkpoint loading
-│   │   ├── train.py                 # ControlNet training script
-│   │   ├── test.py                  # Testing with quantitative metrics
-│   │   ├── generate.py              # Inference-only generation
-│   │   └── data_loader.py           # Dataset class for ControlNet
-│   │
-│   ├── baseline_cgan/               # Pix2Pix (cGAN) baseline
-│   │   ├── train.py                 # cGAN training (wraps pytorch-CycleGAN-and-pix2pix)
-│   │   ├── test.py                  # cGAN testing with same metrics
-│   │   ├── dataset_converter.py     # Convert ControlNet format → Pix2Pix format
-│   │   └── README.md                # Baseline-specific setup instructions
-│   │
-│   ├── data_preparation/            # Dataset building pipeline
-│   │   ├── source_processing.py     # Render depth maps from STL via pyrender + pose alignment
-│   │   ├── target_processing.py     # Rename + resize tactile sensor images
-│   │   ├── prompt_creation.py       # Generate prompt.json from CSV pose data
-│   │   ├── ds_creation.py           # Assemble mega dataset (merge per-object datasets)
-│   │   ├── dataset_split.py         # Train/val/test splitting (70/15/15)
-│   │   ├── modality_split.py        # Split prompts by sensor modality for evaluation
-│   │   └── all_processing.py        # Orchestrator: run full pipeline per object
-│   │
-│   └── evaluation/                  # Evaluation utilities
-│       └── metrics.py               # SSIM, PSNR, MSE, LPIPS, FID computation
-│
-├── scripts/                          # Shell scripts for common workflows
-│   ├── prepare_model.sh             # Download SD1.5 + create ControlNet init checkpoint
-│   ├── train_controlnet.sh          # Launch ControlNet training
-│   ├── test_controlnet.sh           # Launch ControlNet testing
-│   ├── train_pix2pix.sh             # Launch Pix2Pix baseline training
-│   └── test_pix2pix.sh             # Launch Pix2Pix baseline testing
-│
-├── data/                             # Dataset directory (user-populated)
-│   └── example/                     # Minimal example dataset (1 object, 3 sensors)
-│       ├── stl/                     # Source STL files: <obj_id>.stl
-│       ├── csv/                     # Per-object pose CSV: <obj_id>.csv
-│       ├── tactile/                 # Tactile images per object/sensor
-│       │   └── <obj_id>/
-│       │       ├── TacTip/target/
-│       │       ├── ViTac/target/
-│       │       └── ViTacTip/target/
-│       └── prompt.json              # Example prompt file (JSONL)
-│
-├── docs/                            # Documentation and figures
-│   └── figures/
-│
-├── tool_add_control.py              # Utility: create ControlNet init weights from SD1.5
-├── get_model_size.py                # Utility: count and analyse model parameters
-├── requirements.txt                 # Python dependencies
-├── environment.yml                  # Conda environment specification
-├── LICENSE
-└── README.md                        # This file
+|-- cldm/                             # ControlNet modules (at repo root)
+|   |-- cldm.py                      # ControlledUNet, ControlNet, ControlLDM
+|   |-- ddim_hacked.py               # DDIM sampler for ControlNet
+|   |-- hack.py                      # CLIP and attention hacks
+|   |-- logger.py                    # Image logging callback
+|   |-- loss_plotter.py              # Training loss visualisation callback
+|   +-- model.py                     # Model creation and checkpoint loading
+|
+|-- configs/                          # Configuration files
+|   |-- controlnet_train.yaml         # Training config (short prompts)
+|   |-- controlnet_train_long_prompt.yaml  # Training config (long prompts, ablation 2)
+|   +-- cldm_v15.yaml               # ControlNet + SD1.5 architecture config
+|
+|-- multidiffsense/                   # Core source code
+|   |-- controlnet/                   # ControlNet training/testing scripts
+|   |   |-- train.py                 # Training (supports --no_prompt / --no_source ablation)
+|   |   |-- test.py                  # Testing with quantitative metrics
+|   |   |-- generate.py              # Inference-only generation
+|   |   +-- data_loader.py           # Dataset class for ControlNet
+|   |
+|   |-- baseline_cgan/               # Pix2Pix (cGAN) baseline
+|   |   |-- train.py                 # cGAN training
+|   |   |-- test.py                  # cGAN testing with same metrics
+|   |   |-- dataset_converter.py     # Convert ControlNet format -> Pix2Pix format
+|   |   +-- README.md                # Baseline-specific setup instructions
+|   |
+|   |-- data_preparation/            # Dataset building pipeline
+|   |   |-- all_processing.py        # Orchestrator: run full pipeline per object
+|   |   |-- source_processing.py     # Render depth maps from STL (target-driven alignment)
+|   |   |-- target_processing.py     # Rename + resize tactile sensor images
+|   |   |-- prompt_creation.py       # Generate prompt.json (short or long style)
+|   |   |-- ds_creation.py           # Assemble mega dataset (merge per-object datasets)
+|   |   |-- dataset_split.py         # Train/val/test splitting (70/15/15)
+|   |   +-- modality_split.py        # Split prompts by sensor modality for evaluation
+|   |
+|   +-- evaluation/                  # Evaluation utilities
+|       +-- metrics.py               # SSIM, PSNR, MSE, LPIPS, FID computation
+|
+|-- data/                             # Raw data directory (user-populated)
+|   +-- example/                     # Minimal example dataset
+|       |-- stl/                     # STL mesh files: <obj_id>.stl
+|       |-- csv/                     # Per-object pose CSV: <obj_id>.csv
+|       +-- tactile/                 # Tactile images per object/sensor
+|           +-- <obj_id>/
+|               |-- TacTip/target/
+|               |-- ViTac/target/
+|               +-- ViTacTip/target/
+|
+|-- datasets/                         # Assembled dataset (generated by pipeline)
+|   |-- source/                      # All depth maps (shared across splits)
+|   |-- target/                      # All tactile images (shared across splits)
+|   |-- prompt.json                  # Merged short prompts
+|   |-- prompt_long.json             # Merged long prompts (ablation 2)
+|   |-- train/
+|   |   |-- prompt.json
+|   |   +-- prompt_long.json
+|   |-- val/
+|   |   |-- prompt.json
+|   |   +-- prompt_long.json
+|   +-- test/
+|       |-- prompt.json
+|       |-- prompt_long.json
+|       |-- prompt_TacTip.json       # Per-modality splits (from modality_split)
+|       |-- prompt_ViTac.json
+|       +-- prompt_ViTacTip.json
+|
+|-- models/                           # Model checkpoints
+|-- scripts/                          # Shell scripts for common workflows
+|-- docs/                             # Documentation and figures
+|-- tool_add_control.py              # Utility: create ControlNet init weights from SD1.5
+|-- get_model_size.py                # Utility: count and analyse model parameters
+|-- requirements.txt                 # Python dependencies
+|-- environment.yml                  # Conda environment specification
+|-- LICENSE
++-- README.md                        # This file
 ```
 
 ---
@@ -150,21 +162,21 @@ This will:
 
 ## Dataset Preparation
 
-The full pipeline to build the training dataset from raw data.
+The full pipeline builds the training dataset from raw data in 4 steps.
 
-**Expected directory structure:**
+**Expected raw data structure:**
 ```
 data/example/
-├── stl/          # STL mesh files: <obj_id>.stl
-├── csv/          # Pose CSV files: <obj_id>.csv
-└── tactile/      # Tactile images per object/sensor
-    └── <obj_id>/
-        ├── TacTip/target/
-        ├── ViTac/target/
-        └── ViTacTip/target/
+|-- stl/          # STL mesh files: <obj_id>.stl
+|-- csv/          # Pose CSV files: <obj_id>.csv
++-- tactile/      # Tactile images per object/sensor
+    +-- <obj_id>/
+        |-- TacTip/target/
+        |-- ViTac/target/
+        +-- ViTacTip/target/
 ```
 
-### Step 1: Per-Object Processing (all-in-one)
+### Step 1: Per-Object Processing
 
 Process one or more objects end-to-end across all three sensor modalities:
 
@@ -186,11 +198,13 @@ python -m multidiffsense.data_preparation.all_processing \
 
 **Why ViTac first?** Source (depth map) generation aligns each frame by extracting the object from the tactile image to determine its bounding box and centre position. ViTac images are vision-only with no pin markers on the sensor surface, making the object boundary much clearer and easier to segment than TacTip (pin markers) or ViTacTip (hybrid markers). Since the source depth maps represent the same object at the same pose regardless of sensor, they are generated once from ViTac and copied to the other two modalities.
 
+The pipeline iterates only over frames that actually exist in the target directory (not the CSV row count), so missing or removed frames are handled gracefully.
+
 Under the hood, this runs three sub-steps per sensor:
 
-1. **Target processing** (`target_processing.py`) — renames raw tactile images to `<obj_id>_<sensor>_<frame>.png` and resizes to 512×512.
-2. **Source processing** (`source_processing.py`) — renders a base depth map from the STL file via pyrender, then applies per-frame pose transformations (depth-based scaling, yaw rotation, xy translation) and centre-error correction. Only runs for ViTac; source images are copied to TacTip and ViTacTip.
-3. **Prompt creation** (`prompt_creation.py`) — reads the per-object CSV (`<csv_dir>/<obj_id>.csv`) and writes a JSONL prompt file encoding sensor context and 4-DOF pose (x, y, z, yaw).
+1. **Target processing** (`target_processing.py`) -- renames raw tactile images to `<obj_id>_<sensor>_<frame>.png` and resizes to 512x512.
+2. **Source processing** (`source_processing.py`) -- uses target-driven alignment: segments the object in each target frame, then resizes, rotates, and positions the CAD depth map to match the target exactly. Uses Otsu's automatic thresholding (no per-object tuning). Only runs for ViTac; source images are copied to TacTip and ViTacTip.
+3. **Prompt creation** (`prompt_creation.py`) -- reads the per-object CSV and writes a JSONL prompt file. Supports `--prompt_style short` (default) or `--prompt_style long` for ablation studies (see [Ablation Studies](#ablation-studies)).
 
 ### Step 2: Assemble Mega Dataset
 
@@ -204,7 +218,7 @@ python -m multidiffsense.data_preparation.ds_creation \
     --sensors TacTip ViTac ViTacTip
 ```
 
-This copies all source/target images into a flat `source/` and `target/` directory and merges all per-object prompt.json files into one.
+This copies all source/target images into flat `source/` and `target/` directories and merges all per-object prompt.json files into one.
 
 ### Step 3: Train/Val/Test Split
 
@@ -214,17 +228,33 @@ python -m multidiffsense.data_preparation.dataset_split \
     --seed 16
 ```
 
-Splits the merged prompt.json into `train/`, `val/`, `test/` subdirectories (70/15/15). Groups by source image so all sensor modalities for the same contact stay in the same split.
+Splits the merged prompt.json into `train/`, `val/`, `test/` subdirectories (70/15/15). Groups by source image so all sensor modalities for the same contact stay in the same split. Images remain in the parent `datasets/source/` and `datasets/target/`; only prompt files are placed in the split subdirectories.
 
 ### Step 4: Per-Modality Split (for evaluation)
 
 ```bash
 python -m multidiffsense.data_preparation.modality_split \
     --prompt_path datasets/test/prompt.json \
-    --output_dir datasets/
+    --output_dir datasets/test
 ```
 
 Creates `prompt_TacTip.json`, `prompt_ViTac.json`, and `prompt_ViTacTip.json` for per-sensor evaluation.
+
+**Final dataset layout:**
+
+```
+datasets/
+|-- source/            # All depth maps (shared across splits)
+|-- target/            # All tactile images (shared across splits)
+|-- prompt.json        # All samples
+|-- train/prompt.json  # Train split (prompt entries only, no images)
+|-- val/prompt.json    # Val split
++-- test/
+    |-- prompt.json
+    |-- prompt_TacTip.json
+    |-- prompt_ViTac.json
+    +-- prompt_ViTacTip.json
+```
 
 ---
 
@@ -242,6 +272,7 @@ python multidiffsense/controlnet/train.py \
 ```
 
 Key training parameters:
+
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `batch_size` | 8 | Training batch size |
@@ -275,11 +306,7 @@ python multidiffsense/controlnet/test.py \
 ```
 
 Reported metrics (computed per-image and aggregated):
-- **SSIM** — Structural Similarity Index
-- **PSNR** — Peak Signal-to-Noise Ratio (dB)
-- **MSE** — Mean Squared Error
-- **LPIPS** — Learned Perceptual Image Patch Similarity (AlexNet)
-- **FID** — Fréchet Inception Distance
+SSIM (Structural Similarity Index), PSNR (Peak Signal-to-Noise Ratio in dB), MSE (Mean Squared Error), LPIPS (Learned Perceptual Image Patch Similarity, AlexNet), and FID (Frechet Inception Distance).
 
 Results are saved as a CSV file and visual grids (control | target | generated).
 
@@ -287,40 +314,108 @@ Results are saved as a CSV file and visual grids (control | target | generated).
 
 ## Ablation Studies
 
-To reproduce the ablation experiments from the paper:
+All ablations involve **retraining** the model (not just test-time flag changes). Each ablation produces a separate checkpoint that is then evaluated.
 
-### 1. No Prompt (text conditioning removed)
+### Ablation 1: Conditioning Modality
+
+Tests the contribution of each conditioning signal by training without it.
+
+**1a. Source only (no text prompt)** -- train with empty prompts, depth map conditioning only:
 
 ```bash
+# Train
+python multidiffsense/controlnet/train.py \
+    --config configs/controlnet_train.yaml \
+    --no_prompt \
+    --output_suffix _no_prompt
+
+# Test (use the no-prompt checkpoint, with --no_prompt to match)
 python multidiffsense/controlnet/test.py \
-    --checkpoint path/to/checkpoint.ckpt \
+    --config configs/controlnet_train.yaml \
+    --checkpoint results_no_prompt/lightning_logs/.../best.ckpt \
     --modality ViTacTip \
     --no_prompt \
     --output_dir results/ablation_no_prompt
 ```
 
-### 2. No Source (depth map conditioning removed)
+**1b. Prompt only (no depth map)** -- train with blank source images, text prompt conditioning only:
 
 ```bash
+# Train
+python multidiffsense/controlnet/train.py \
+    --config configs/controlnet_train.yaml \
+    --no_source \
+    --output_suffix _no_source
+
+# Test
 python multidiffsense/controlnet/test.py \
-    --checkpoint path/to/checkpoint.ckpt \
+    --config configs/controlnet_train.yaml \
+    --checkpoint results_no_source/lightning_logs/.../best.ckpt \
     --modality ViTacTip \
     --no_source \
     --output_dir results/ablation_no_source
 ```
 
-### 3. Per-Modality Evaluation
+The `--output_suffix` flag appends to the output directory (e.g. `results_no_prompt/`) so checkpoints from different ablations don't overwrite each other.
 
-Run testing separately for each sensor type to get per-modality metrics:
+### Ablation 2: Prompt Richness (Short vs Long)
+
+Tests whether richer text prompts improve generation quality.
+
+**Short prompt** (default): sensor context + object pose.
+
+```json
+{"sensor_context": "captured by a high-resolution vision only sensor ViTac.",
+ "object_pose": {"x": 0.12, "y": -0.34, "z": 1.5, "yaw": 15.0}}
+```
+
+**Long prompt**: object description + contact description + sensor context + style tags + negatives + object pose.
+
+```json
+{"object_description": "A edge-shaped object with distinct geometric features",
+ "contact_description": "Medium contact on the object surface with moderate indentation",
+ "sensor_context": "Captured by a high-resolution vision only sensor ViTac",
+ "style_tags": "High quality, detailed texture, realistic tactile response, sharp sensor reading",
+ "negatives": "Blurry, low quality, artifacts, noise, distortion",
+ "object_pose": {"x": 0.12, "y": -0.34, "z": 1.5, "yaw": 15.0}}
+```
+
+**Workflow** -- generate both prompt types, then train separately:
 
 ```bash
-for modality in TacTip ViTac ViTacTip; do
-    python multidiffsense/controlnet/test.py \
-        --checkpoint path/to/checkpoint.ckpt \
-        --modality $modality \
-        --output_dir results/ablation_${modality}
-done
+# Step 1: Generate short prompts (default, already done in normal pipeline)
+python -m multidiffsense.data_preparation.all_processing \
+    --stl_dir data/example/stl --csv_dir data/example/csv \
+    --tactile_dir data/example/tactile --obj_ids 1 \
+    --prompt_style short
+
+# Step 2: Generate long prompts (saved as prompt_long.json alongside prompt.json)
+python -m multidiffsense.data_preparation.all_processing \
+    --stl_dir data/example/stl --csv_dir data/example/csv \
+    --tactile_dir data/example/tactile --obj_ids 1  \
+    --prompt_style long
+
+# Step 3: Assemble + split both
+python -m multidiffsense.data_preparation.ds_creation \
+    --tactile_dir data/example/tactile --output_dir datasets \
+    --object_ids 1 --prompt_style short
+python -m multidiffsense.data_preparation.ds_creation \
+    --tactile_dir data/example/tactile --output_dir datasets \
+    --object_ids 1 --prompt_style long
+
+python -m multidiffsense.data_preparation.dataset_split --base_dir datasets --prompt_style short
+python -m multidiffsense.data_preparation.dataset_split --base_dir datasets --prompt_style long
+
+# Step 4: Train with short prompts (default config)
+python multidiffsense/controlnet/train.py \
+    --config configs/controlnet_train.yaml
+
+# Step 5: Train with long prompts (separate config pointing to prompt_long.json)
+python multidiffsense/controlnet/train.py \
+    --config configs/controlnet_train_long_prompt.yaml
 ```
+
+Short and long prompts coexist in the same dataset directory -- `prompt.json` and `prompt_long.json` sit side by side, sharing the same source/target images.
 
 ---
 
@@ -331,7 +426,6 @@ We compare against Pix2Pix as a conditional GAN baseline using the [pytorch-Cycl
 ### Setup
 
 ```bash
-# Clone the Pix2Pix framework (required dependency)
 git clone https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix external/pytorch-CycleGAN-and-pix2pix
 ```
 
@@ -339,7 +433,7 @@ git clone https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix external/pytor
 
 ```bash
 python multidiffsense/baseline_cgan/dataset_converter.py \
-    --controlnet_dataset data/processed \
+    --controlnet_dataset datasets \
     --output_path external/pytorch-CycleGAN-and-pix2pix/datasets/depth_to_sensor \
     --modality TacTip
 ```
@@ -347,8 +441,6 @@ python multidiffsense/baseline_cgan/dataset_converter.py \
 ### Train Pix2Pix
 
 ```bash
-bash scripts/train_pix2pix.sh
-# Or:
 cd external/pytorch-CycleGAN-and-pix2pix
 python train.py \
     --dataroot datasets/depth_to_sensor \
@@ -377,9 +469,8 @@ Generate tactile images from depth maps without ground truth targets:
 python multidiffsense/controlnet/generate.py \
     --config configs/controlnet_train.yaml \
     --checkpoint path/to/best_checkpoint.ckpt \
-    --source_dir data/new_objects/depth_maps \
-    --prompt_json data/new_objects/prompts.json \
-    --modality TacTip \
+    --dataset_dir datasets \
+    --prompt_json datasets/test/prompt_ViTacTip.json \
     --output_dir results/generated
 ```
 
@@ -430,4 +521,4 @@ If you find this work useful, please cite:
 
 ## License
 
-This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
+This project is licensed under the MIT License -- see [LICENSE](LICENSE) for details.
