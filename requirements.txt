@@ -1,0 +1,40 @@
+# MultiDiffSense - Python Dependencies
+# Tested with Python 3.10+
+
+# Core Deep Learning
+torch>=2.0.0
+torchvision>=0.15.0
+pytorch-lightning>=1.9.5
+# Stable Diffusion / ControlNet dependencies
+einops>=0.6.0
+omegaconf>=2.3.0
+transformers>=4.25.0
+open-clip-torch>=2.20.0
+safetensors>=0.3.0
+taming-transformers=0.0.1
+
+# Latent Diffusion Model
+-e git+https://github.com/CompVis/latent-diffusion.git#egg=latent-diffusion
+
+# Image processing
+opencv-python>=4.7.0
+Pillow>=9.4.0
+scikit-image>=0.20.0
+numpy>=1.24.0
+
+# Metrics
+lpips>=0.1.4
+torch-fidelity>=0.3.0
+
+# Visualisation
+matplotlib>=3.7.0
+tensorboard>=2.12.0
+
+# Dataset / utilities
+PyYAML>=6.0
+tqdm>=4.64.0
+pandas>=2.0.0
+
+# Pix2Pix baseline (optional)
+dominate>=2.8.0
+wandb>=0.16.0
