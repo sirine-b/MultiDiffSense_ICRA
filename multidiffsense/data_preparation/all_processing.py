@@ -59,44 +59,45 @@ def copy_source_images(tactile_dir, obj_id, from_sensor, to_sensor):
         shutil.copy2(os.path.join(src_dir, filename), os.path.join(dst_dir, filename))
         count += 1
 
-    print(f"  Copied {count} source images: {from_sensor} → {to_sensor}")
+    print(f"  Copied {count} source images: {from_sensor} -> {to_sensor}")
     return count
 
 
-def all_processing(stl_dir, csv_dir, tactile_dir, obj_id):
+def all_processing(stl_dir, csv_dir, tactile_dir, obj_id, prompt_style="short"):
     """Run the full pipeline for one object across all sensor types.
 
     Processing order:
-      1. ViTac:    target → source (from STL) → prompt
-      2. TacTip:   target → copy source from ViTac → prompt
-      3. ViTacTip: target → copy source from ViTac → prompt
+      1. ViTac:    target -> source (from STL) -> prompt
+      2. TacTip:   target -> copy source from ViTac -> prompt
+      3. ViTacTip: target -> copy source from ViTac -> prompt
     """
     print(f"\n{'='*60}")
-    print(f"Processing object {obj_id}")
+    print(f"Processing object {obj_id} (prompt_style={prompt_style})")
     print(f"{'='*60}")
 
     for sensor in SENSOR_ORDER:
-        print(f"\n{'─'*40}")
+        print(f"\n{'-'*40}")
         print(f"Sensor: {sensor}")
-        print(f"{'─'*40}")
+        print(f"{'-'*40}")
 
-        # Step 1: Target processing (rename + resize) — all sensors
+        # Step 1: Target processing (rename + resize) -- all sensors
         print(f"\n[1] Target processing ({sensor})...")
         target_processing(tactile_dir, obj_id, sensor)
 
-        # Step 2: Source processing — ViTac only; copy for others
+        # Step 2: Source processing -- ViTac only; copy for others
         if sensor == "ViTac":
-            print(f"\n[2] Source processing ({sensor} — generating from STL)...")
+            print(f"\n[2] Source processing ({sensor} -- generating from STL)...")
             source_processing(stl_dir, csv_dir, tactile_dir, obj_id, sensor)
         else:
-            print(f"\n[2] Copying source images from ViTac → {sensor}...")
+            print(f"\n[2] Copying source images from ViTac -> {sensor}...")
             copy_source_images(tactile_dir, obj_id, "ViTac", sensor)
 
-        # Step 3: Prompt creation — all sensors
-        print(f"\n[3] Prompt creation ({sensor})...")
-        prompt_processing(csv_dir, tactile_dir, obj_id, sensor)
+        # Step 3: Prompt creation -- all sensors
+        print(f"\n[3] Prompt creation ({sensor}, style={prompt_style})...")
+        prompt_processing(csv_dir, tactile_dir, obj_id, sensor,
+                          prompt_style=prompt_style)
 
-    print(f"\nObject {obj_id} complete — all 3 sensors processed.")
+    print(f"\nObject {obj_id} complete -- all 3 sensors processed.")
 
 
 def parse_args():
@@ -111,11 +112,16 @@ def parse_args():
                         help="Root tactile dir: <tactile_dir>/<obj_id>/<sensor>/target/")
     parser.add_argument("--obj_ids", nargs="+", required=True,
                         help="Object IDs to process (e.g., 1 3 6 8 18)")
+    parser.add_argument("--prompt_style", type=str, default="short",
+                        choices=["short", "long"],
+                        help="short: sensor context + pose. "
+                             "long: full description (ablation 2)")
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
     for obj_id in args.obj_ids:
-        all_processing(args.stl_dir, args.csv_dir, args.tactile_dir, obj_id)
+        all_processing(args.stl_dir, args.csv_dir, args.tactile_dir,
+                       obj_id, prompt_style=args.prompt_style)
     print(f"\nAll objects processed: {args.obj_ids}")

@@ -1,18 +1,28 @@
 """
-MultiDiffSense — ControlNet Training Script
+MultiDiffSense -- ControlNet Training Script
 
 Trains a ControlNet model conditioned on depth maps with text prompts
 to generate multi-modal tactile sensor images.
 
 Usage:
-    python multidiffsense/controlnet/train.py --config configs/controlnet_train.yaml
-
-    # Override specific parameters:
+    # Full model (default)
     python multidiffsense/controlnet/train.py \
         --config configs/controlnet_train.yaml \
-        --batch_size 4 \
-        --lr 1e-5 \
-        --max_epochs 200
+        --batch_size 8 --lr 1e-5 --max_epochs 350 --sd_locked
+
+    # Ablation 1a: train WITHOUT text prompt (source only)
+    python multidiffsense/controlnet/train.py \
+        --config configs/controlnet_train.yaml \
+        --no_prompt --output_suffix _no_prompt
+
+    # Ablation 1b: train WITHOUT source depth map (prompt only)
+    python multidiffsense/controlnet/train.py \
+        --config configs/controlnet_train.yaml \
+        --no_source --output_suffix _no_source
+
+    # Ablation 2: train with long prompts (use a different prompt.json)
+    python multidiffsense/controlnet/train.py \
+        --config configs/controlnet_train_long_prompt.yaml
 """
 
 import argparse
@@ -26,16 +36,6 @@ import sys
 _repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if _repo_root not in sys.path:
     sys.path.insert(0, _repo_root)
-# Also add common `src` locations so worker processes can import `ldm`
-_candidate_src_paths = [
-    os.path.join(_repo_root, "src"),
-    os.path.join(_repo_root, "src", "latent-diffusion"),
-    os.path.join(_repo_root, "src", "latent_diffusion"),
-    os.path.join(_repo_root, "src", "latent-diffusion", "ldm"),
-]
-for _p in _candidate_src_paths:
-    if os.path.exists(_p) and _p not in sys.path:
-        sys.path.insert(0, _p)
 
 import pytorch_lightning as pl
 import torch
@@ -54,7 +54,7 @@ _loss_plotter = None
 
 
 def signal_handler(sig, frame):
-    """Handle Ctrl+C gracefully — save loss plot before exiting."""
+    """Handle Ctrl+C gracefully -- save loss plot before exiting."""
     print("\nReceived interrupt signal. Saving current progress...")
     if _loss_plotter:
         _loss_plotter.save_current_plot(" (Interrupted)")
@@ -73,6 +73,15 @@ def parse_args():
     parser.add_argument("--sd_locked", action="store_true", default=None)
     parser.add_argument("--resume_from", type=str, default=None,
                         help="Resume training from a Lightning checkpoint")
+
+    # Ablation flags
+    parser.add_argument("--no_prompt", action="store_true",
+                        help="Ablation: train with empty prompts (source-only conditioning)")
+    parser.add_argument("--no_source", action="store_true",
+                        help="Ablation: train with blank source images (prompt-only conditioning)")
+    parser.add_argument("--output_suffix", type=str, default="",
+                        help="Suffix appended to output_dir for ablation runs "
+                             "(e.g. _no_prompt, _no_source, _long_prompt)")
     return parser.parse_args()
 
 
@@ -91,12 +100,22 @@ def main():
     max_epochs = args.max_epochs or cfg["training"]["max_epochs"]
     sd_locked = args.sd_locked if args.sd_locked is not None else cfg["training"]["sd_locked"]
     only_mid_control = cfg["training"].get("only_mid_control", False)
-    output_dir = cfg["training"]["output_dir"]
+    output_dir = cfg["training"]["output_dir"] + args.output_suffix
     image_log_freq = cfg["training"].get("image_log_frequency", 300)
     num_workers = cfg["training"].get("num_workers", 4)
 
     # Register signal handler
     signal.signal(signal.SIGINT, signal_handler)
+
+    # Print ablation mode
+    if args.no_prompt:
+        print("=" * 60)
+        print("ABLATION MODE: no_prompt (training with empty text prompts)")
+        print("=" * 60)
+    if args.no_source:
+        print("=" * 60)
+        print("ABLATION MODE: no_source (training with blank depth maps)")
+        print("=" * 60)
 
     # --- Model ---
     print("Loading model...")
@@ -112,10 +131,14 @@ def main():
     train_dataset = MultiDiffSenseDataset(
         dataset_dir=dataset_dir,
         prompt_json=cfg["data"]["train_prompt"],
+        no_prompt=args.no_prompt,
+        no_source=args.no_source,
     )
     val_dataset = MultiDiffSenseDataset(
         dataset_dir=dataset_dir,
         prompt_json=cfg["data"]["val_prompt"],
+        no_prompt=args.no_prompt,
+        no_source=args.no_source,
     )
 
     train_loader = DataLoader(
@@ -135,6 +158,7 @@ def main():
 
     print(f"Train dataset size: {len(train_dataset)}")
     print(f"Validation dataset size: {len(val_dataset)}")
+    print(f"Output directory: {output_dir}")
 
     # --- Callbacks ---
     tb_logger = TensorBoardLogger(save_dir=output_dir, name="lightning_logs")
@@ -152,7 +176,7 @@ def main():
     if torch.cuda.is_available():
         accelerator = "gpu"
     else:
-        print("WARNING: No GPU found — training on CPU (this will be very slow)")
+        print("WARNING: No GPU found -- training on CPU (this will be very slow)")
         accelerator = "cpu"
 
     trainer = pl.Trainer(

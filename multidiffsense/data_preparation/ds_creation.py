@@ -47,7 +47,8 @@ def viridis_map(image):
     return (colormapped[:, :, :3] * 255).astype("uint8")
 
 
-def mega_dataset_creation(tactile_dir, output_dir, object_ids, sensors):
+def mega_dataset_creation(tactile_dir, output_dir, object_ids, sensors,
+                          prompt_style="short"):
     """Combine per-object datasets into one mega dataset.
 
     Args:
@@ -55,9 +56,11 @@ def mega_dataset_creation(tactile_dir, output_dir, object_ids, sensors):
         output_dir:   Output directory for the combined dataset
         object_ids:   List of object ID strings to include
         sensors:      List of sensor type strings
+        prompt_style: "short" or "long" -- selects which prompt file to merge
     """
     create_dataset_dirs(output_dir)
     all_prompts = []
+    prompt_filename = "prompt_long.json" if prompt_style == "long" else "prompt.json"
 
     for obj_id in object_ids:
         for sensor in sensors:
@@ -85,7 +88,7 @@ def mega_dataset_creation(tactile_dir, output_dir, object_ids, sensors):
                 print(f"  Copied {subfolder}/ images from {obj_id}/{sensor}")
 
             # Collect prompt entries
-            prompt_path = os.path.join(dataset_path, "prompt.json")
+            prompt_path = os.path.join(dataset_path, prompt_filename)
             if os.path.exists(prompt_path):
                 with open(prompt_path, "r") as fin:
                     for line in fin:
@@ -93,14 +96,14 @@ def mega_dataset_creation(tactile_dir, output_dir, object_ids, sensors):
                         if line:
                             all_prompts.append(json.loads(line))
 
-    # Write merged prompt.json
-    merged_path = os.path.join(output_dir, "prompt.json")
+    # Write merged prompt file
+    merged_path = os.path.join(output_dir, prompt_filename)
     with open(merged_path, "w") as fout:
         for entry in all_prompts:
             fout.write(json.dumps(entry) + "\n")
 
-    print(f"\nMerged dataset: {len(all_prompts)} samples → {output_dir}")
-    print(f"  prompt.json: {merged_path}")
+    print(f"\nMerged dataset: {len(all_prompts)} samples -> {output_dir}")
+    print(f"  {prompt_filename}: {merged_path}")
 
 
 def parse_args():
@@ -114,10 +117,14 @@ def parse_args():
     parser.add_argument("--sensors", nargs="+",
                         default=["TacTip", "ViTac", "ViTacTip"],
                         help="Sensor types to include")
+    parser.add_argument("--prompt_style", type=str, default="short",
+                        choices=["short", "long"],
+                        help="Which prompt file to merge (short=prompt.json, long=prompt_long.json)")
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
     mega_dataset_creation(args.tactile_dir, args.output_dir,
-                          args.object_ids, args.sensors)
+                          args.object_ids, args.sensors,
+                          prompt_style=args.prompt_style)

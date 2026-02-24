@@ -18,16 +18,20 @@ import random
 from collections import defaultdict
 
 
-def dataset_split(base_dir, seed=16, train_ratio=0.7, val_ratio=0.15):
-    """Split prompt.json into train/val/test by grouping on source image.
+def dataset_split(base_dir, seed=16, train_ratio=0.7, val_ratio=0.15,
+                  prompt_style="short"):
+    """Split prompt file into train/val/test by grouping on source image.
 
     Args:
-        base_dir: Directory containing the merged prompt.json
+        base_dir: Directory containing the merged prompt file
         seed: Random seed for reproducibility
         train_ratio: Fraction for training
         val_ratio: Fraction for validation (remainder goes to test)
+        prompt_style: "short" or "long" -- selects which prompt file to split
     """
-    prompt_path = os.path.join(base_dir, "prompt.json")
+    suffix = "_long" if prompt_style == "long" else ""
+    prompt_filename = f"prompt{suffix}.json"
+    prompt_path = os.path.join(base_dir, prompt_filename)
 
     with open(prompt_path, "r") as f:
         prompts = [json.loads(line) for line in f if line.strip()]
@@ -58,7 +62,7 @@ def dataset_split(base_dir, seed=16, train_ratio=0.7, val_ratio=0.15):
         split_dir = os.path.join(base_dir, split_name)
         os.makedirs(split_dir, exist_ok=True)
 
-        out_path = os.path.join(split_dir, "prompt.json")
+        out_path = os.path.join(split_dir, prompt_filename)
         count = 0
         with open(out_path, "w") as f:
             for key in keys:
@@ -66,7 +70,7 @@ def dataset_split(base_dir, seed=16, train_ratio=0.7, val_ratio=0.15):
                     f.write(json.dumps(entry) + "\n")
                     count += 1
 
-        print(f"  {split_name}: {count} samples ({len(keys)} groups) → {out_path}")
+        print(f"  {split_name}: {count} samples ({len(keys)} groups) -> {out_path}")
 
     print("Splits created!")
 
@@ -78,10 +82,14 @@ def parse_args():
     parser.add_argument("--seed", type=int, default=16)
     parser.add_argument("--train_ratio", type=float, default=0.7)
     parser.add_argument("--val_ratio", type=float, default=0.15)
+    parser.add_argument("--prompt_style", type=str, default="short",
+                        choices=["short", "long"],
+                        help="Which prompt file to split")
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
     dataset_split(args.base_dir, seed=args.seed,
-                  train_ratio=args.train_ratio, val_ratio=args.val_ratio)
+                  train_ratio=args.train_ratio, val_ratio=args.val_ratio,
+                  prompt_style=args.prompt_style)
