@@ -8,7 +8,7 @@
 Official implementation of **MultiDiffSense**, a ControlNet-based diffusion model for generating multi-modal visuo-tactile sensor images using text and depth map conditioning. This work addresses the cross-modal translation problem in tactile sensing by generating realistic aligned sensor outputs across 3 sensor madalities (TacTip, ViTac, ViTacTip) using depth maps- and text-guided diffusion.
 
 <p align="center">
-  <img src="docs/figures/pipeline.png" alt="MultiDiffSense Pipeline" width="800"/>
+  <img src="figures/pipeline.png" alt="MultiDiffSense Pipeline" width="800"/>
 </p>
 
 ---
