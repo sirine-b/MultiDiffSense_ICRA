@@ -5,7 +5,7 @@
 [![Python](https://img.shields.io/badge/Python-3.10+-yellow)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red)](https://pytorch.org/)
 
-Official implementation of **MultiDiffSense**, a ControlNet-based diffusion model for generating multi-modal visuo-tactile sensor images from depth map conditioning. This work addresses the cross-modal translation problem in tactile sensing by generating realistic sensor outputs (TacTip, ViTac, ViTacTip) from rendered depth maps using text-guided diffusion.
+Official implementation of **MultiDiffSense**, a ControlNet-based diffusion model for generating multi-modal visuo-tactile sensor images from depth map conditioning. This work addresses the cross-modal translation problem in tactile sensing by generating realistic sensor outputs (TacTip, ViTac, ViTacTip) using depth maps- and text-guided diffusion.
 
 <p align="center">
   <img src="figures/pipeline.png" alt="MultiDiffSense Pipeline" width="800"/>
@@ -40,7 +40,7 @@ MultiDiffSense leverages ControlNet (built on Stable Diffusion 1.5) to translate
 
 The model is conditioned on:
 1. **Depth maps** (rendered from STL files) as spatial control signals
-2. **Text prompts** describing the object geometry, contact conditions, and target sensor type
+2. **Text prompts** describing the 4-DOF contact pose, and target sensor type
 
 ---
 
