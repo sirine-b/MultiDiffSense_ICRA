@@ -1,8 +1,9 @@
-# MultiDiffSense: Diffusion-Based Multi-Modal Visuo-Tactile Image Generation
-
-[![Paper](https://img.shields.io/badge/Paper-ICRA%202026-blue)](https://arxiv.org/)
-[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-[![HuggingFace](https://img.shields.io/badge/ModelWeights-HuggingFace-yellow)](https://huggingface.co/sirine16/MultiDiffSense)
+<h1 align="center">MultiDiffSense: Diffusion-Based Multi-Modal Visuo-Tactile Image Generation</h1>
+<p align="center">
+  <a href="https://arxiv.org/"><img src="https://img.shields.io/badge/Paper-ICRA%202026-blue" alt="Paper"/></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green" alt="License"/></a>
+  <a href="https://huggingface.co/sirine16/MultiDiffSense"><img src="https://img.shields.io/badge/ModelWeights-HuggingFace-yellow" alt="HuggingFace"/></a>
+</p>
 
 Official implementation of **MultiDiffSense**, a unified ControlNet-based diffusion model that generates realistic and physically grounded tactile sensor images across three different sensor types (ViTac, TacTip, ViTacTip) from a single model, conditioned on CAD-derived depth maps and structured text prompts encoding contact pose and sensor modality.
 
@@ -50,18 +51,18 @@ Generate tactile images directly using the pre-trained checkpoint (conditioned o
 ```bash
 pip install huggingface_hub
 
-# From a single depth map + text prompt:
+# Option 1: From a single depth map + text prompt:
 python multidiffsense/controlnet/generate.py \
     --source_image path/to/depth_map.png \
     --prompt '{"sensor_context": "captured by a high-resolution vision only sensor ViTac.", "object_pose": {"x": 0.12, "y": -0.34, "z": 1.5, "yaw": 15.0}}'
 
-# From a prompt file (batch) -- each line contains a depth map path and prompt:
+# Option 2: From a prompt file (batch) -- each line contains a depth map path and prompt:
 python multidiffsense/controlnet/generate.py \
     --dataset_dir datasets \
     --prompt_json datasets/test/prompt_ViTacTip.json
 ```
-
-Note: Each line in the prompt file is a JSON object that specifies the depth map path (relative to `--dataset_dir`), the text prompt and in case of training/testing the target path (in case of inference: no target image):
+_
+**Note:** For Option 2: each line in the prompt file is a JSON object that specifies the depth map path (relative to `--dataset_dir`), the text prompt and in case of training/testing the target path (in case of inference = no target image):
 
 ```json
 {"source": "source/1_0.png", "target": "target/1_ViTacTip_0.png", "prompt": {"sensor_context": "captured by a high-resolution vision only sensor ViTac.", "object_pose": {"x": 0.12, "y": -0.34, "z": 1.5, "yaw": 15.0}}}
@@ -84,8 +85,14 @@ MultiDiffSense/
 |
 |-- configs/                          # Configuration files
 |   |-- controlnet_train.yaml         # Training config (short prompts)
-|   |-- controlnet_train_long_prompt.yaml  # Training config (long prompts, ablation 2)
-|   +-- cldm_v15.yaml               # ControlNet + SD1.5 architecture config
+|   +-- controlnet_train_long_prompt.yaml  # Training config (long prompts, ablation 2)
+|
+|-- ldm/                              # Latent Diffusion Model core (from CompVis/stable-diffusion)
+|   |-- data/                        # Data utilities
+|   |-- models/
+|   |   |-- diffusion/               # DDPM, DDIM, PLMS samplers
+|   |   +-- autoencoder.py           # VQ-VAE encoder/decoder
+|   +-- modules/                     # UNet, attention, encoders, EMA, distributions
 |
 |-- multidiffsense/                   # Core source code
 |   |-- controlnet/                   # ControlNet training/testing scripts
@@ -140,14 +147,13 @@ MultiDiffSense/
 |       |-- prompt_ViTac.json
 |       +-- prompt_ViTacTip.json
 |
-|-- models/                           # Model checkpoints
-|-- scripts/                          # Shell scripts for common workflows
-|-- docs/                             # Documentation and figures
+|-- models/                          # Model checkpoints
+|   +-- cldm_v15.yaml                # ControlNet + SD1.5 architecture config
+|
+|-- scripts/                         # Shell scripts for common workflows
+|-- figures/                         # Figures included in README
 |-- tool_add_control.py              # Utility: create ControlNet init weights from SD1.5
-|-- get_model_size.py                # Utility: count and analyse model parameters
 |-- requirements.txt                 # Python dependencies
-|-- environment.yml                  # Conda environment specification
-|-- LICENSE
 +-- README.md                        # This file
 ```
 
