@@ -2,7 +2,7 @@
 
 [![Paper](https://img.shields.io/badge/Paper-ICRA%202026-blue)](https://arxiv.org/)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-[![HuggingFace](https://img.shields.io/badge/HuggingFace-yellow)](https://huggingface.co/sirine16/MultiDiffSense)
+[![HuggingFace](https://img.shields.io/badge/ModelWeights-HuggingFace-yellow)](https://huggingface.co/sirine16/MultiDiffSense)
 
 Official implementation of **MultiDiffSense**, a unified ControlNet-based diffusion model that generates realistic and physically grounded tactile sensor images across three different sensor types (ViTac, TacTip, ViTacTip) from a single model, conditioned on CAD-derived depth maps and structured text prompts encoding contact pose and sensor modality.
 
