@@ -16,6 +16,7 @@ Official implementation of **MultiDiffSense**, a ControlNet-based diffusion mode
 ## Table of Contents
 
 - [Overview](#overview)
+- [Quick Start (Pre-trained Model)](#quick-start-pre-trained-model)
 - [Repository Structure](#repository-structure)
 - [Installation](#installation)
 - [Dataset Preparation](#dataset-preparation)
@@ -23,7 +24,6 @@ Official implementation of **MultiDiffSense**, a ControlNet-based diffusion mode
 - [Testing & Evaluation](#testing--evaluation)
 - [Ablation Studies](#ablation-studies)
 - [Baseline Comparison (cGAN / Pix2Pix)](#baseline-comparison-cgan--pix2pix)
-- [Inference / Generation](#inference--generation)
 - [Example Data](#example-data)
 - [Citation](#citation)
 - [Acknowledgements](#acknowledgements)
@@ -44,6 +44,33 @@ The model is conditioned on:
 
 ---
 
+## Quick Start (Pre-trained Model)
+
+Generate tactile images directly using the pre-trained checkpoint (conditioned on short prompts + depth maps) from [Hugging Face](https://huggingface.co/sirine-b/MultiDiffSense) -- no training required. The checkpoint is downloaded automatically on first run.
+
+```bash
+pip install huggingface_hub
+
+# From a single depth map + text prompt:
+python multidiffsense/controlnet/generate.py \
+    --source_image path/to/depth_map.png \
+    --prompt '{"sensor_context": "captured by a high-resolution vision only sensor ViTac.", "object_pose": {"x": 0.12, "y": -0.34, "z": 1.5, "yaw": 15.0}}'
+
+# From a prompt file (batch) -- each line contains a depth map path and prompt:
+python multidiffsense/controlnet/generate.py \
+    --dataset_dir datasets \
+    --prompt_json datasets/test/prompt_ViTacTip.json
+```
+
+Note: Each line in the prompt file is a JSON object that specifies the depth map path (relative to `--dataset_dir`), the text prompt and in case of training/testing the target path (in case of inference: no target image):
+
+```json
+{"source": "source/1_0.png", "target": "target/1_ViTacTip_0.png", "prompt": {"sensor_context": "captured by a high-resolution vision only sensor ViTac.", "object_pose": {"x": 0.12, "y": -0.34, "z": 1.5, "yaw": 15.0}}}
+```
+
+For training from scratch, dataset preparation, evaluation, and ablation studies, see the sections below.
+
+---
 ## Repository Structure
 
 ```
