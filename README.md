@@ -159,7 +159,7 @@ MultiDiffSense/
 ### Option A: Conda (recommended)
 
 ```bash
-git clone https://github.com/<your-username>/MultiDiffSense.git
+git clone https://github.com/sirine-b/MultiDiffSense.git
 cd MultiDiffSense
 conda env create -f environment.yml
 conda activate multidiffsense
@@ -168,7 +168,7 @@ conda activate multidiffsense
 ### Option B: pip
 
 ```bash
-git clone https://github.com/<your-username>/MultiDiffSense.git
+git clone https://github.com/sirine-b/MultiDiffSense.git
 cd MultiDiffSense
 pip install -r requirements.txt
 ```
