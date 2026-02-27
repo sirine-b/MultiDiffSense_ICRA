@@ -2,10 +2,9 @@
 
 [![Paper](https://img.shields.io/badge/Paper-ICRA%202026-blue)](https://arxiv.org/)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.10+-yellow)](https://www.python.org/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red)](https://pytorch.org/)
+[![HuggingFace](https://img.shields.io/badge/HuggingFace-yellow)](https://huggingface.co/sirine16/MultiDiffSense)
 
-Official implementation of **MultiDiffSense**, a ControlNet-based diffusion model for generating multi-modal visuo-tactile sensor images from depth map conditioning. This work addresses the cross-modal translation problem in tactile sensing by generating realistic sensor outputs (TacTip, ViTac, ViTacTip) using depth maps- and text-guided diffusion.
+Official implementation of **MultiDiffSense**, a unified ControlNet-based diffusion model that generates realistic and physically grounded tactile sensor images across three different sensor types (ViTac, TacTip, ViTacTip) from a single model, conditioned on CAD-derived depth maps and structured text prompts encoding contact pose and sensor modality.
 
 <p align="center">
   <img src="figures/pipeline.png" alt="MultiDiffSense Pipeline" width="800"/>
@@ -527,10 +526,11 @@ If you find this work useful, please cite:
 
 ```bibtex
 @inproceedings{multidiffsense2026,
-    title     = {MultiDiffSense: Diffusion-Based Multi-Modal Visuo-Tactile Image Generation},
-    author    = {TODO},
+    title     = {MultiDiffSense: Diffusion-Based Multi-Modal Visuo-Tactile Image Generation Conditioned on Object Shape and Contact Pose},
+    author    = {Sirine Bhouri and Lan Wei and Jian-Qing Zheng and Dandan Zhang},
     booktitle = {IEEE International Conference on Robotics and Automation (ICRA)},
     year      = {2026}
+    url       = {https://arxiv.org/abs/2602.19348}
 }
 ```
 
