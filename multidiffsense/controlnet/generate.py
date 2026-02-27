@@ -45,7 +45,7 @@ from tqdm import tqdm
 from cldm.model import create_model, load_state_dict
 from multidiffsense.controlnet.data_loader import MultiDiffSenseDataset
 
-HF_REPO = "sirine-b/MultiDiffSense"
+HF_REPO = "sirine16/MultiDiffSense"
 HF_CKPT = "multidiffsense.ckpt"
 
 
@@ -147,13 +147,17 @@ def generate_single(model, source_image_path, prompt, output_dir, device="cuda")
     source = cv2.imread(source_image_path)
     if source is None:
         raise FileNotFoundError(f"Cannot read: {source_image_path}")
+    print(f"After imread: {source.shape}, dtype: {source.dtype}")
     source = cv2.cvtColor(source, cv2.COLOR_BGR2RGB)
+    print(f"After cvtColor: {source.shape}")
     source = cv2.resize(source, (512, 512), interpolation=cv2.INTER_LINEAR)
+    print(f"After resize: {source.shape}")
     source = source.astype(np.float32) / 255.0
 
     # Build batch dict matching what model.log_images() expects
-    hint = torch.from_numpy(source).float().permute(2, 0, 1).unsqueeze(0).to(device)
-
+    hint = torch.from_numpy(source).float().unsqueeze(0).to(device) 
+    print(f"Hint tensor shape: {hint.shape}")  # must be [1, 3, 512, 512]
+ 
     # Blank target placeholder (log_images expects 'jpg' key but it is
     # not used during sampling)
     jpg = torch.zeros_like(hint)
