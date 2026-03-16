@@ -1,6 +1,6 @@
 <h1 align="center">MultiDiffSense: Diffusion-Based Multi-Modal Visuo-Tactile Image Generation</h1>
 <p align="center">
-  <a href="https://arxiv.org/"><img src="https://img.shields.io/badge/Paper-ICRA%202026-blue" alt="Paper"/></a>
+  <a href="https://arxiv.org/pdf/2602.19348"><img src="https://img.shields.io/badge/Paper-ICRA%202026-blue" alt="Paper"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green" alt="License"/></a>
   <a href="https://huggingface.co/sirine16/MultiDiffSense"><img src="https://img.shields.io/badge/ModelWeights-HuggingFace-yellow" alt="HuggingFace"/></a>
 </p>
